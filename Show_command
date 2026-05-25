@@ -1,0 +1,72 @@
+from netmiko import ConnectHandler
+from netmiko.exceptions import NetmikoTimeoutException, NetmikoAuthenticationException
+
+# 1. Hardcoded Credentials
+username = "root"
+password = "Embe1mpls"
+
+# 2. Collect Target Device & Check Intent
+hostname = input("Enter Device Hostname: ")
+
+print("\n--- Available Check Options ---\n")
+print("- Type 'hardware' for chassis hardware details")
+print("- Type 'alarms' for chassis alarms")
+print("- Type 'fpc' for FPC details")
+print("- Type 'interface <name>' (e.g., 'interface ge-0/0/0') for interface details")
+print("-------------------------------")
+user_input = input("What would you like to check? ").strip().lower()
+
+# 3. Map input to the correct Junos command
+if user_input == "hardware":
+    command = "show chassis hardware"
+elif "alarm" in user_input:
+    command = "show chassis alarms"
+elif "fpc" in user_input:
+    command = "show chassis fpc"
+elif user_input.startswith("interface"):
+    parts = user_input.split()
+    if len(parts) > 1:
+        interface_name = parts[1]
+        command = f"show interfaces terse {interface_name}"
+    else:
+        command = "show interfaces terse"
+else:
+    # Fallback: Treat input as a raw command if it doesn't match keywords
+    command = user_input
+
+# 4. Define connection targets (Primary and Console)
+connection_targets = [hostname, f"{hostname}-con"]
+connection = None
+
+# 5. Loop through targets to establish connection
+for target in connection_targets:
+    print(f"\n>>> Attempting to connect to: {target}...")
+    
+    device_params = {
+        'device_type': 'juniper_junos',
+        'host': target,
+        'username': username,
+        'password': password,
+    }
+
+    try:
+        connection = ConnectHandler(**device_params)
+        print(f"SUCCESS: Connected to {target}")
+        break  # Exit loop on successful connection
+        
+    except (NetmikoTimeoutException, NetmikoAuthenticationException) as e:
+        print(f"FAILED: Could not reach {target}.")
+        if target == connection_targets[-1]: 
+            print("ERROR: All connection attempts failed. Check physical cabling or DNS.")
+        else:
+            print("Retrying with Console address...")
+
+# 6. Execute command and print output
+if connection:
+    print(f"\n>>> Executing command: {command}")
+    output = connection.send_command(command)
+    
+    print("\n--- COMMAND OUTPUT ---")
+    print(output)
+    
+    connection.disconnect()
