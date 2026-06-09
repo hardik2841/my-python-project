@@ -102,9 +102,10 @@ model_map = {
 # Value = EVO PXE profile name used with evo-pxe-setup -n <profile>
 # ---------------------------------------------------------------------------
 vmhost_model_map = {
-    "vmhost":           "LG_S2C-vmhost",
-    "vmhost-lite":      "LG_S2C-vmhost-lite",
-    "vmhost-hw":        "LG_S2C-vmhost-hw",
+    "mx304":  "mx304-mx10k",
+    "mx240":  "l2-MXvmhost",
+    "mx480":  "l2-MXvmhost",
+    "mx960":  "l2-MXvmhost",
     # Add new VMhost models below this line, same pattern:
     # "vmhost-xxxx": "LG_S2C-vmhost-xxxx",
 }
